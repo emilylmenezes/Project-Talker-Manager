@@ -35,9 +35,8 @@ app.get('/talker/:id', async (req, res) => {
   const data = await onRequestTalkers();
   const filtered = data.find((talker) => Number(talker.id) === Number(id));
 
-  if (!filtered) {
-    return res.status(404).json({ message: 'Pessoa palestrante não encontrada' });
-  }
+  if (!filtered) return res.status(404).json({ message: 'Pessoa palestrante não encontrada' });
+  
   return res.status(200).send(filtered);
 });
 
