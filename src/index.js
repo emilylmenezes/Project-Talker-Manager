@@ -16,17 +16,28 @@ app.get('/', (_request, response) => {
 
 const onRequestTalkers = async () => {
   const pathDirname = path.resolve(__dirname, 'talker.json');
-  const results = JSON.parse(await fs.readFile(pathDirname, 'utf-8'));
-  return results;
+  const data = JSON.parse(await fs.readFile(pathDirname, 'utf-8'));
+  return data;
 };
 
-app.get('/talker', async (_request, response) => {
-  const results = await onRequestTalkers();
+app.get('/talker', async (_req, res) => {
+  const data = await onRequestTalkers();
 
-  if (!results) { 
-    return response.status(HTTP_OK_STATUS).send([]);
+  if (!data) { 
+    return res.status(HTTP_OK_STATUS).send([]);
   } 
-  response.status(HTTP_OK_STATUS).json(results);
+  res.status(HTTP_OK_STATUS).json(data);
+});
+
+app.get('/talker/:id', async (req, res) => {
+  const { id } = req.params;
+  const data = await onRequestTalkers();
+  const filtered = data.find((talker) => Number(talker.id) === Number(id));
+
+  if (!filtered) {
+    return res.status(404).json({ message: 'Pessoa palestrante não encontrada' });
+  }
+  return res.status(200).send(filtered);
 });
 
 app.listen(PORT, () => {
