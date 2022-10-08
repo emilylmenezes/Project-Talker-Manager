@@ -1,4 +1,4 @@
-function messageTalk(req, res, next) {
+function serviceTalk(req, res, next) {
   const { talk } = req.body;
   
   if (!talk) {
@@ -7,4 +7,4 @@ function messageTalk(req, res, next) {
   next();
 }
 
-module.exports = messageTalk;
+module.exports = serviceTalk;

@@ -1,4 +1,4 @@
-function messageRate(req, res, next) {
+function serviceRate(req, res, next) {
   const { rate } = req.body.talk;
   const validate = Number.isInteger(rate);
 
@@ -10,4 +10,4 @@ function messageRate(req, res, next) {
   next();
 }
 
-module.exports = messageRate;
+module.exports = serviceRate;
