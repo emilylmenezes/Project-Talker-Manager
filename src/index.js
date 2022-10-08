@@ -12,6 +12,8 @@ const middlewareRate = require('./middlewares/middlewareRate');
 const middlewareWatchedAt = require('./middlewares/middlewareWatchedAt');
 const middlewareToken = require('./middlewares/middlewareToken');
 
+const { responseDados } = require('./utils/utilsService');
+
 const app = express();
 app.use(bodyParser.json());
 
@@ -66,13 +68,11 @@ app.post('/talker', middlewareToken, middlewareName, middlewareAge,
 app.put('/talker/:id', middlewareToken, middlewareName, middlewareAge,
   middlewareTalk, middlewareWatchedAt, middlewareRate,
   async (req, res) => {
-  const getId = Number(req.params.id);
-  const newTalker = { getId, ...req.body };
-  const allTalkers = JSON.parse(await fs.readFile(talkerJSON, 'utf-8'));
-  const flag = allTalkers.findIndex((acc) => acc.id === Number(getId));
-  allTalkers[flag] = newTalker;
-  await fs.writeFile(talkerJSON, JSON.stringify(allTalkers));
-  res.status(200).json(newTalker);
+  const { id } = req.params;
+  const talker = req.body;
+  const dado = await responseDados(Number(id), talker);
+
+  return res.status(200).json(dado);
 });
 
 app.delete('/talker/:id', middlewareToken, async (req, res) => {
