@@ -46,7 +46,8 @@ app.get('/talker/:id', async (req, res) => {
   return res.status(200).json(flag);
 });
 
-app.post('/login', middlewareEmail, middlewarePassword, (_req, res) => {
+app.post('/login', middlewareEmail, 
+middlewarePassword, (_req, res) => {
   const token = lib();
   res.status(200).json({ token });
 });
