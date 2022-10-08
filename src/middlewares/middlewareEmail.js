@@ -1,7 +1,6 @@
-function middlewareEmail(req, res, next) {
+function middlewareeEmail(req, res, next) {
   const { email } = req.body;
   const regex = /\S+@\S+\.\S+/;
-  
   if (!email) {
     return res.status(400).json({ message: 'O campo "email" é obrigatório' });
   }
@@ -13,4 +12,4 @@ function middlewareEmail(req, res, next) {
   next();
 }
 
-module.exports = middlewareEmail;
+module.exports = middlewareeEmail;

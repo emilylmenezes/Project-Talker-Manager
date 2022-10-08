@@ -2,15 +2,15 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const fs = require('fs').promises;
 const path = require('path');
-const lib = require('../middlewares/lib');
-const middlewareEmail = require('../middlewares/middlewareEmail');
-const middlewarePassword = require('../middlewares/middlewarePassword');
-const middlewareName = require('../middlewares/middlewareName');
-const middlewareAge = require('../middlewares/middlewareAge');
-const middlewareTalk = require('../middlewares/middlewareTalk');
-const middlewareRate = require('../middlewares/middlewareRate');
-const middlewareWatchedAt = require('../middlewares/middlewareWatchedAt');
-const middlewareToken = require('../middlewares/middlewareToken');
+const lib = require('./middlewares/lib');
+const middlewareEmail = require('./middlewares/middlewareEmail');
+const middlewarePassword = require('./middlewares/middlewarePassword');
+const middlewareName = require('./middlewares/middlewareName');
+const middlewareAge = require('./middlewares/middlewareAge');
+const middlewareTalk = require('./middlewares/middlewareTalk');
+const middlewareRate = require('./middlewares/middlewareRate');
+const middlewareWatchedAt = require('./middlewares/middlewareWatchedAt');
+const middlewareToken = require('./middlewares/middlewareToken');
 
 const app = express();
 app.use(bodyParser.json());
@@ -23,10 +23,6 @@ app.get('/', (_request, response) => {
   response.status(HTTP_OK_STATUS).send();
 });
 
-app.listen(PORT, () => {
-  console.log('Online');
-});
-
 const talkerJSON = path.resolve(__dirname, './talker.json');
 
 app.get('/talker', async (_req, res) => {
@@ -37,8 +33,8 @@ app.get('/talker', async (_req, res) => {
 app.get('/talker/search', middlewareToken, async (req, res) => {
   const allTalkers = JSON.parse(await fs.readFile(talkerJSON, 'utf8'));
   const { q } = req.query;
-  const searchTalker = allTalkers.filter((talk) => talk.name.includes(q));
-    res.status(200).json(searchTalker);
+  const searchTalkers = allTalkers.filter((acc) => acc.name.includes(q));
+    res.status(200).json(searchTalkers);
   });
 
 app.get('/talker/:id', async (req, res) => {
@@ -50,38 +46,44 @@ app.get('/talker/:id', async (req, res) => {
   return res.status(200).json(flag);
 });
 
-app.post('/login', middlewareEmail, middlewarePassword, (_req, res) => {
-  const libCrypto = lib();
-  res.status(200).json({ libCrypto });
+app.post('/login', middlewareEmail, middlewarePassword,
+  (_req, res) => {
+  const token = lib();
+  res.status(200).json({ token });
 });
 
 app.post('/talker', middlewareToken, middlewareName, middlewareAge,
   middlewareTalk, middlewareWatchedAt, middlewareRate,
   async (req, res) => {
   const allTalkers = JSON.parse(await fs.readFile(talkerJSON, 'utf-8'));
-  const addTalker = { id: allTalkers.length + 1, ...req.body };
-  allTalkers.push(addTalker);
+  const addId = allTalkers.length + 1;
+  const reqBody = { id: addId, ...req.body };
+  allTalkers.push(reqBody);
   await fs.writeFile(talkerJSON, JSON.stringify(allTalkers));
-  res.status(201).json(addTalker);
+  res.status(201).json(reqBody);
 });
 
 app.put('/talker/:id', middlewareToken, middlewareName, middlewareAge,
   middlewareTalk, middlewareWatchedAt, middlewareRate,
   async (req, res) => {
-  const flag = Number(req.params.id);
-  const newTalker = { flag, ...req.body };
+  const getId = Number(req.params.id);
+  const newTalker = { getId, ...req.body };
   const allTalkers = JSON.parse(await fs.readFile(talkerJSON, 'utf-8'));
-  const alertFind = allTalkers.findIndex((acc) => acc.id === Number(flag));
-  allTalkers[alertFind] = newTalker;
+  const flag = allTalkers.findIndex((acc) => acc.id === Number(getId));
+  allTalkers[flag] = newTalker;
   await fs.writeFile(talkerJSON, JSON.stringify(allTalkers));
   res.status(200).json(newTalker);
 });
 
 app.delete('/talker/:id', middlewareToken, async (req, res) => {
-  const flag = Number(req.params.id);
+  const getId = Number(req.params.id);
   const allTalkers = JSON.parse(await fs.readFile(talkerJSON, 'utf-8'));
-  const alert = allTalkers.findIndex((acc) => acc.id === Number(flag));
-  allTalkers.splice(alert, 1);
+  const flag = allTalkers.findIndex((acc) => acc.id === Number(getId));
+  allTalkers.splice(flag, 1);
   await fs.writeFile(talkerJSON, JSON.stringify(allTalkers));
   res.sendStatus(204);
-  });
+});
+
+app.listen(PORT, () => {
+  console.log('Online');
+});
