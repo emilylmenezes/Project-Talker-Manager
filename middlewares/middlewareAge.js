@@ -1,4 +1,4 @@
-function serviceAge(req, res, next) {
+function middlewareAge(req, res, next) {
   const { age } = req.body;
   
   if (!age) {
@@ -10,4 +10,4 @@ function serviceAge(req, res, next) {
   next();
   }
   
-  module.exports = serviceAge;
+  module.exports = middlewareAge;

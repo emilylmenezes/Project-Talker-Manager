@@ -1,4 +1,4 @@
-function serviceName(req, res, next) {
+function middlewareName(req, res, next) {
   const { name } = req.body;
   
   if (!name) {
@@ -11,4 +11,4 @@ function serviceName(req, res, next) {
   next();
   }
   
-  module.exports = serviceName;
+  module.exports = middlewareName;

@@ -1,4 +1,4 @@
-function serviceTalk(req, res, next) {
+function middlewareTalk(req, res, next) {
   const { talk } = req.body;
   
   if (!talk) {
@@ -7,4 +7,4 @@ function serviceTalk(req, res, next) {
   next();
 }
 
-module.exports = serviceTalk;
+module.exports = middlewareTalk;
