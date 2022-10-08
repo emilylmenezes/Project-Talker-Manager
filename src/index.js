@@ -2,7 +2,15 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const fs = require('fs').promises;
 const path = require('path');
-const crypto = require('crypto');
+const serviceAge = require('../service/serviceAge');
+const middlewareEmail = require('../middlewares/middlewareEmail');
+const lib = require('../utils/lib');
+const serviceName = require('../service/serviceName');
+const middlewarePassword = require('../middlewares/middlewarePassword');
+const serviceRate = require('../service/serviceRate');
+const serviceTalk = require('../service/serviceTalk');
+const serviceToken = require('../service/serviceToken');
+const serviceWatchedAt = require('../service/serviceWatchedAt');
 
 const app = express();
 app.use(bodyParser.json());
@@ -15,48 +23,66 @@ app.get('/', (_request, response) => {
   response.status(HTTP_OK_STATUS).send();
 });
 
-const onRequestTalkers = async () => {
-  const pathDirname = path.resolve(__dirname, 'talker.json');
-  const data = JSON.parse(await fs.readFile(pathDirname, 'utf-8'));
-  return data;
-};
+const talkersJSON = path.resolve(__dirname, './talker.json');
 
 app.get('/talker', async (_req, res) => {
-  const data = await onRequestTalkers();
-
-  if (!data) { 
-    return res.status(HTTP_OK_STATUS).send([]);
-  } 
-  res.status(HTTP_OK_STATUS).json(data);
+  const allTalkers = JSON.parse(await fs.readFile(talkersJSON, 'utf8'));
+  return res.status(200).json(allTalkers);
 });
+
+app.get('/talker/search', serviceToken, async (req, res) => {
+  const allTalkers = JSON.parse(await fs.readFile(talkersJSON, 'utf8'));
+  const { q } = req.query;
+  const searchFiltered = allTalkers.filter((acc) => acc.name.includes(q));
+    res.status(200).json(searchFiltered);
+  });
 
 app.get('/talker/:id', async (req, res) => {
-  const { id } = req.params;
-  const data = await onRequestTalkers();
-  const filtered = data.find((talker) => Number(talker.id) === Number(id));
-
-  if (!filtered) return res.status(404).json({ message: 'Pessoa palestrante não encontrada' });
-  
-  return res.status(200).send(filtered);
+  const allTalkers = JSON.parse(await fs.readFile(talkersJSON, 'utf8'));
+  const flag = allTalkers.find(({ id }) => id === Number(req.params.id));
+  if (!flag) {
+    return res.status(404).send({ message: 'Pessoa palestrante não encontrada' });
+  }
+  return res.status(200).json(flag);
 });
 
-app.post('/login', (req, res) => {
-  const value = crypto.randomBytes(8).toString('hex');
-  const validate = /[^@ \t\r\n]+@[^@ \t\r\n]+\.[^@ \t\r\n]+/;
-  const messageEmailNull = 'O campo "email" é obrigatório';
-  const messageEmailFormat = 'O "email" deve ter o formato "email@email.com"';
-  const messagePasswordNull = 'O campo "password" é obrigatório';
-  const messagePasswordValidate = 'O "password" deve ter pelo menos 6 caracteres';
-
-  const { email, password } = req.body;
-
-  if (!email) return res.status(400).json({ message: messageEmailNull });
-  if (!validate.test(email)) return res.status(400).json({ message: messageEmailFormat });
-  if (!password) return res.status(400).json({ message: messagePasswordNull });
-  if (password.length < 6) return res.status(400).json({ message: messagePasswordValidate });
-  return res.status(200).json({ token: value });
+app.post('/login', middlewareEmail, middlewarePassword, (_req, res) => {
+  const token = lib();
+  res.status(200).json({ token });
 });
 
-app.listen(PORT, () => {
+app.post('/talker', serviceToken, serviceName, serviceAge, serviceTalk, serviceWatchedAt,
+  serviceRate,
+  async (req, res) => {
+  const allTalkers = JSON.parse(await fs.readFile(talkersJSON, 'utf-8'));
+  const numberId = allTalkers.length + 1;
+  const addTalker = { id: numberId, ...req.body };
+  allTalkers.push(addTalker);
+  await fs.writeFile(talkersJSON, JSON.stringify(allTalkers));
+  res.status(201).json(addTalker);
+});
+
+app.put('/talker/:id', serviceToken, serviceName, serviceAge, serviceTalk, serviceWatchedAt,
+  serviceRate,
+  async (req, res) => {
+  const numberId = Number(req.params.id);
+  const talk = { numberId, ...req.body };
+  const allTalkers = JSON.parse(await fs.readFile(talkersJSON, 'utf-8'));
+  const acc = allTalkers.findIndex((i) => i.id === Number(numberId));
+  allTalkers[acc] = talk;
+  await fs.writeFile(talkersJSON, JSON.stringify(allTalkers));
+  res.status(200).json(talk);
+});
+
+app.delete('/talker/:id', serviceToken, async (req, res) => {
+  const numberId = Number(req.params.id);
+  const allTalkers = JSON.parse(await fs.readFile(talkersJSON, 'utf-8'));
+  const acc = allTalkers.findIndex((i) => i.id === Number(numberId));
+  allTalkers.splice(acc, 1);
+  await fs.writeFile(talkersJSON, JSON.stringify(allTalkers));
+  res.sendStatus(204);
+  });
+
+  app.listen(PORT, () => {
   console.log('Online');
 });
