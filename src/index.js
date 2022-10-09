@@ -3,6 +3,10 @@ const bodyParser = require('body-parser');
 const path = require('path');
 const fs = require('fs').promises;
 
+const serviceCrypto = require('./service/serviceCrypto');
+const middlewareEmail = require('./middlewares/validateEmail/middlewareEmail');
+const middlewarePassword = require('./middlewares/validatePassword/middlewarePassword');
+
 const app = express();
 app.use(bodyParser.json());
 
@@ -28,6 +32,13 @@ app.get('/talker/:id', async (req, res) => {
     return res.status(404).send({ message: 'Pessoa palestrante não encontrada' });
   }
   return res.status(200).json(flag);
+});
+
+app.post('/login', middlewareEmail, middlewarePassword,
+  (_req, res) => {
+  const token = serviceCrypto();
+  console.log(token);
+  res.status(200).json({ token });
 });
 
 app.listen(PORT, () => {
