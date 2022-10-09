@@ -35,12 +35,13 @@ app.get('/talker', async (_req, res) => {
 
 app.get('/talker/search', middlewareToken, async (req, res) => {
   const allTalkers = await requestTalkers();
+  const allTalkers = JSON.parse(await fs.readFile(talkerJSON, 'utf8'));
   const { q } = req.query;
   const searchTalkers = allTalkers.filter((acc) => acc.name.includes(q));
     res.status(200).json(searchTalkers);
   });
   
-app.get('/talker/:id', async (req, res) => {
+  app.get('/talker/:id', async (req, res) => {
   const allTalkers = JSON.parse(await fs.readFile(pathname, 'utf8'));
   const flag = allTalkers.find(({ id }) => id === Number(req.params.id));
   if (!flag) {
